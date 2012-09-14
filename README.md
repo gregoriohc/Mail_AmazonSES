@@ -52,6 +52,7 @@ License
 =======
 
 Copyright (c) 2012 The PHP Group
+
 Author: Gregorio Hernandez Caso
 
 This source file is subject to version 2.02 of the PHP license,
