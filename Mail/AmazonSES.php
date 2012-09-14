@@ -47,13 +47,16 @@ class Mail_AmazonSES extends Mail {
      */
     function Mail_AmazonSES($params = array())
     {
+        // Set Amazon AWS SDK path
         if (isset($params['sdk_path'])) {
             $this->amazon_sdk_path = $params['sdk_path'];
             unset($params['sdk_path']);
         }
+        // Include required Amazon SDK files
         require_once($this->amazon_sdk_path.'sdk.class.php');
         require_once($this->amazon_sdk_path.'services/ses.class.php');
 
+        // Set Amazon SES service params
         $this->ses_options = $params;
     }
 
@@ -83,23 +86,30 @@ class Mail_AmazonSES extends Mail {
      */
     function send($recipients, $headers, $body)
     {
+        // Create Amazon SES service
         $ses = new AmazonSES($this->ses_options);
 
+        // Check recipients
         $recipients = $this->parseRecipients($recipients);
         if (PEAR::isError($recipients)) {
             return $recipients;
         }
 
+        // Send an email for each recipient
         foreach ($recipients as $recipient) {
             $headersRecipient = $headers;
+            // Set email 'To' header
             if (!isset($headersRecipient['To'])) $headersRecipient['To'] = $recipient;
 
+            // Prepare headers
             $headerElements = $this->prepareHeaders($headersRecipient);
             if (PEAR::isError($headerElements)) {
                 return $headerElements;
             }
+            // Get 'from' and headers in text mode
             list($from, $textHeaders) = $headerElements;
 
+            // Send email
             $response = $ses->send_raw_email(array(
                 'Data' => base64_encode($textHeaders . "\n" . $body)
             ), array(
@@ -107,6 +117,7 @@ class Mail_AmazonSES extends Mail {
                 'Destinations' => $recipient
             ));
 
+            // Check response
             if(!$response->isOK()) {
                 return PEAR::raiseError('Error Sending via Amazon SES');
             }
